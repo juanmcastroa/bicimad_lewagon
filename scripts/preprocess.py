@@ -73,7 +73,7 @@ try:
     temp['month_sin'] = temp.apply(lambda x: sin(((x['month'] - 5) % 12) / 12.0 * 2 * pi), axis=1)
     temp['month_cos'] = temp.apply(lambda x:cos(((x['month'] - 5) % 12) / 12.0 * 2 * pi), axis=1)
 
-    temp.drop(columns=["name","longitude","address","month","time","weekday"])
+    temp.drop(columns=["name","address","month","time","weekday"], inplace=True)
 
     temp.to_csv(basename+"_processed.csv")
 
