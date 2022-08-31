@@ -7,6 +7,7 @@ from holidays_es import get_provinces, Province
 import sys
 
 
+
 myfile= sys.argv[1]
 station= int(sys.argv[2])
 
@@ -63,11 +64,13 @@ temp=pd.DataFrame()
 for i in range(len(df)):
     try:
         new_dict= df['stations'][i][station]
+
         new_dict['id']=df['_id'][i]
         new_dict['time']=df['time'][i]
         new_dict['date']=df['date'][i]
         new_dict['holidays']=df['holidays'][i]
         temp = temp.append(new_dict, ignore_index=True)
+
     except:
         quit()
 
@@ -93,4 +96,5 @@ temp['month_cos'] = temp.apply(lambda x:cos(((x['month'] - 5) % 12) / 12.0 * 2 *
 temp.drop(columns=["name","longitude","address","month","time","weekday"])
 
 temp.to_csv(basename+"_processed.csv", index=False)
+
 
