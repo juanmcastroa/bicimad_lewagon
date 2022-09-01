@@ -1,6 +1,0 @@
-#!/bin/sh
-
-for file in *.json;
-do
-python3 preprocess.py $file
-done
