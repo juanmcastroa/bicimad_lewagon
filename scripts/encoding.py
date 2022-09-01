@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
 
 def encode_columns(df):
+    temp = df 
     #Transform the data
     f_transformer = StandardScaler()
     df[['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'longitude', 'no_available', 'latitude', 'time',
