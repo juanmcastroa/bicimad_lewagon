@@ -8,3 +8,5 @@ def model():
 
     model = mlflow.keras.load_model(model_uri=model_uri)
     return model
+
+#def predict():
