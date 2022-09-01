@@ -13,6 +13,7 @@ import sys
 import streamlit as st
 
 from bicimad_lewagon.data.registry import load_model
+from scripts import encoding
 # from taxifare.ml_logic.preprocessor import preprocess_features
 # # $WIPE_END
 
@@ -151,7 +152,7 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
     temp['holidays']=temp['holidays'].astype('bool')
     temp.drop(columns=["name","longitude","address","month","time","weekday"])
 
-
+    encoded_variable=encoding(temp)
 #     # $CHA_BEGIN
 
 #     # ⚠️ if the timezone conversion was not handled here the user would be assumed to provide an UTC datetime
