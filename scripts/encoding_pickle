@@ -24,7 +24,7 @@ def fit_Standard(df):
 
 
 
-def fit_OHE (df)
+def fit_OHE (df):
     temp = df 
     temp.holidays = temp.holidays.astype('int')
     ohe = OneHotEncoder(sparse=False, handle_unknown='ignore')
@@ -34,7 +34,8 @@ def fit_OHE (df)
         pickle.dump(temp, file)
 
 
-def clean_model (df)
+def clean_model(df):
+    temp = df 
     temp_model = temp.drop(columns=['name', 'number', 'address', 'id'])
     return temp_model
 
@@ -60,6 +61,7 @@ def transform_scalar(df):
 
     
 def transform_OHE(df):
+    temp_model = df
     ohe = pickle.load(open("fit_OHE.pkl","rb"))
     transformed_data = pd.DataFrame(ohe.fit(temp_model[categorical_features]))
     transformed_data.columns = ohe.get_feature_names(categorical_features)
