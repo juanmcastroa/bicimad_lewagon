@@ -1,0 +1,197 @@
+# from datetime import datetime
+# # $WIPE_BEGIN
+# import pytz
+# import pandas as pd
+
+from sklearn import preprocessing
+import pandas as pd
+import numpy as np
+from math import pi, sin, cos
+from datetime import datetime
+from holidays_es import get_provinces, Province
+import sys
+import streamlit as st
+
+from bicimad_lewagon.data.registry import load_model
+# from taxifare.ml_logic.preprocessor import preprocess_features
+# # $WIPE_END
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+# $WIPE_BEGIN
+# 💡 Preload the model to accelerate the predictions
+# We want to avoid loading the heavy deep-learning model from MLflow at each `get("/predict")`
+# The trick is to load the model in memory when the uvicorn server starts
+# Then to store the model in an `app.state.model` global variable accessible across all routes!
+# This will prove very useful for demo days
+app.state.model = load_model()
+# $WIPE_END
+
+# http://127.0.0.1:8000/predict?pickup_datetime=2012-10-06 12:10:20&pickup_longitude=40.7614327&pickup_latitude=-73.9798156&dropoff_longitude=40.6513111&dropoff_latitude=-73.8803331&passenger_count=2
+@app.get("/predict")
+def predict(date: datetime.date,  # 2013-07-06 17:18:00
+            time: datetime.time,    # -73.950655
+            name: object,     # 40.783282
+            ):      # 1
+    #!pip install streamlit
+
+
+    # d = st.date_input("When's your birthday",datetime.now())
+    # date=d
+
+    # t = st.time_input('Set an alarm for', datetime.now())
+    # time=t.hour
+    # print(time)
+
+    # name='Puerta del Sol B'
+
+    holidays=[datetime.date(2018, 1, 1),
+ datetime.date(2018, 1, 6),
+ datetime.date(2018, 3, 30),
+ datetime.date(2018, 5, 1),
+ datetime.date(2018, 8, 15),
+ datetime.date(2018, 10, 12),
+ datetime.date(2018, 11, 1),
+ datetime.date(2018, 12, 6),
+ datetime.date(2018, 12, 8),
+ datetime.date(2018, 12, 25),
+ datetime.date(2018, 3, 29),
+ datetime.date(2018, 5, 2),
+ datetime.date(2018, 5, 15),
+ datetime.date(2018, 11, 9),
+ datetime.date(2019, 1, 1),
+ datetime.date(2019, 4, 19),
+ datetime.date(2019, 5, 1),
+ datetime.date(2019, 8, 15),
+ datetime.date(2019, 10, 12),
+ datetime.date(2019, 11, 1),
+ datetime.date(2019, 12, 6),
+ datetime.date(2019, 12, 25),
+ datetime.date(2019, 1, 7),
+ datetime.date(2019, 4, 18),
+ datetime.date(2019, 5, 2),
+ datetime.date(2019, 12, 9),
+ datetime.date(2019, 5, 15),
+ datetime.date(2019, 11, 9),
+ datetime.date(2020, 1, 1),
+ datetime.date(2020, 1, 6),
+ datetime.date(2020, 4, 10),
+ datetime.date(2020, 5, 1),
+ datetime.date(2020, 8, 15),
+ datetime.date(2020, 10, 12),
+ datetime.date(2020, 12, 8),
+ datetime.date(2020, 12, 25),
+ datetime.date(2020, 4, 9),
+ datetime.date(2020, 5, 2),
+ datetime.date(2020, 11, 2),
+ datetime.date(2020, 12, 7),
+ datetime.date(2020, 5, 15),
+ datetime.date(2020, 11, 9),
+ datetime.date(2021, 1, 1),
+ datetime.date(2021, 1, 6),
+ datetime.date(2021, 4, 2),
+ datetime.date(2021, 5, 1),
+ datetime.date(2021, 10, 12),
+ datetime.date(2021, 11, 1),
+ datetime.date(2021, 12, 6),
+ datetime.date(2021, 12, 8),
+ datetime.date(2021, 12, 25),
+ datetime.date(2021, 3, 19),
+ datetime.date(2021, 4, 1),
+ datetime.date(2021, 5, 3),
+ datetime.date(2021, 5, 15),
+ datetime.date(2021, 11, 9)]
+    holiday= date in holidays
+
+    columns=['activate', 'name', 'reservations_count', 'light', 'total_bases',
+        'free_bases', 'number', 'longitude', 'no_available', 'address',
+        'latitude', 'dock_bikes', 'id', 'time', 'date', 'holidays', 'datetime',
+        'feels_like', 'weather_main', 'weekday', 'year', 'month', 'hour_sin',
+        'hour_cos', 'weekday_sin', 'weekday_cos', 'month_sin', 'month_cos']
+    temp = pd.DataFrame(columns=columns)
+
+    datetime=(str(date)+str(time))
+
+    weekday=date.weekday()
+
+    year=date.year
+
+    month=date.month
+
+    hour_sin=  sin(time / 24.0 * 2 * pi)
+    hour_cos=  cos(time / 24.0 * 2 * pi)
+    weekday_sin= sin(weekday / 7.0 * 2 * pi)
+    weekday_cos=  cos(weekday / 7.0 * 2 * pi)
+    month_sin=  sin(((month - 5) % 12) / 12.0 * 2 * pi)
+    month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
+
+    new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
+        'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
+        'latitude':-3.701603, 'dock_bikes':0, 'id':(str(date)+'T'+str(time)), 'time':time, 'date':date, 'holidays':holiday, 'datetime':datetime,
+        'feels_like':17.44, 'weather_main':'Rain', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
+        'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
+
+
+    temp=temp.append(new_row,ignore_index=True)
+
+    for column in ['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'no_available', 'dock_bikes', 'time', 'weekday', 'year', 'month']:
+        temp[column]=temp[column].astype('int64')
+
+    temp['holidays']=temp['holidays'].astype('bool')
+    temp.drop(columns=["name","longitude","address","month","time","weekday"])
+
+
+#     # $CHA_BEGIN
+
+#     # ⚠️ if the timezone conversion was not handled here the user would be assumed to provide an UTC datetime
+#     # create datetime object from user provided date
+#     # pickup_datetime = datetime.strptime(pickup_datetime, "%Y-%m-%d %H:%M:%S")
+
+#     # localize the user provided datetime with the NYC timezone
+#     eastern = pytz.timezone("US/Eastern")
+#     localized_pickup_datetime = eastern.localize(pickup_datetime, is_dst=None)
+
+#     # convert the user datetime to UTC and format the datetime as expected by the pipeline
+#     utc_pickup_datetime = localized_pickup_datetime.astimezone(pytz.utc)
+#     formatted_pickup_datetime = utc_pickup_datetime.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+#     # fixing a value for the key, unused by the model
+#     # in the future the key might be removed from the pipeline input
+#     key = "2013-07-06 17:18:00.000000119"
+
+#     X_pred = pd.DataFrame(dict(
+#         key=[key],  # useless but the pipeline requires it
+#         pickup_datetime=[formatted_pickup_datetime],
+#         pickup_longitude=[pickup_longitude],
+#         pickup_latitude=[pickup_latitude],
+#         dropoff_longitude=[dropoff_longitude],
+#         dropoff_latitude=[dropoff_latitude],
+#         passenger_count=[passenger_count]))
+
+#     model = app.state.model
+#     X_processed = preprocess_features(X_pred)
+#     y_pred = model.predict(X_processed)
+
+#     # ⚠️ fastapi only accepts simple python data types as a return value
+#     # among which dict, list, str, int, float, bool
+#     # in order to be able to convert the api response to json
+#     return dict(fare=float(y_pred))
+#     # $CHA_END
+
+
+# @app.get("/")
+# def root():
+#     # $CHA_BEGIN
+#     return dict(greeting="Hello")
+#     # $CHA_END
