@@ -12,8 +12,10 @@ from holidays_es import get_provinces, Province
 import sys
 import streamlit as st
 
+
 #from bicimad_lewagon.data.registry import load_model
 #from scripts import encoding
+
 # from taxifare.ml_logic.preprocessor import preprocess_features
 # # $WIPE_END
 
@@ -166,7 +168,7 @@ def index(test: str):
 def index():
     return {"ok": True}
 
-
+    encoded_variable=encoding(temp)
 #     # $CHA_BEGIN
 
 #     # ⚠️ if the timezone conversion was not handled here the user would be assumed to provide an UTC datetime
