@@ -1,23 +1,23 @@
-sklearn
-pandas
-numpy
-seaborn
-matplotlib
+# sklearn
+# pandas
+# numpy
+# seaborn
+# matplotlib
 
-tensorflow
+# tensorflow
 
-mlflow
+# mlflow
 
-python-dotenv
+# python-dotenv
 
-colorama
+# colorama
 
-streamlit
+# streamlit
 
-fastapi
+# fastapi
 
-uvicorn
+# uvicorn
 
-holidays-es
+# holidays-es
 
-beautifulsoup4
+# beautifulsoup4
