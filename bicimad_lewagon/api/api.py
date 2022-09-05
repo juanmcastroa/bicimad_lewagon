@@ -1,26 +1,20 @@
-# from datetime import datetime
-# # $WIPE_BEGIN
-# import pytz
-# import pandas as pd
-
+from contextlib import redirect_stderr
+from datetime import datetime
 from sklearn import preprocessing
 import pandas as pd
 import numpy as np
 from math import pi, sin, cos
-from datetime import datetime
+import datetime
 from holidays_es import get_provinces, Province
 import sys
-import streamlit as st
-
-from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
-from bicimad_lewagon.data.registry import load_model
-
-
-# from taxifare.ml_logic.preprocessor import preprocess_features
-# # $WIPE_END
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
+from bicimad_lewagon.data.registry import load_model
+import mlflow
+import os
+from colorama import Fore, Style
+#from tensorflow.keras import Model
 
 app = FastAPI()
 
@@ -42,27 +36,7 @@ app.add_middleware(
 
 app.state.model = load_model()
 
-
-
-# $WIPE_END
-
-# http://127.0.0.1:8000/predict?pickup_datetime=2012-10-06 12:10:20&pickup_longitude=40.7614327&pickup_latitude=-73.9798156&dropoff_longitude=40.6513111&dropoff_latitude=-73.8803331&passenger_count=2
-@app.get("/predict")
-def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
-            time,#: datetime.time,    # -73.950655
-            name#: object,     # 40.783282
-            ):      # 1
-    pass
-    d = st.date_input("When's your birthday",datetime.now())
-    date=d
-
-    t = st.time_input('Set an alarm for', datetime.now())
-    time=t.hour
-    print(time)
-
-    name='Puerta del Sol B'
-
-    holidays=[datetime.date(2018, 1, 1),
+holidays=[datetime.date(2018, 1, 1),
  datetime.date(2018, 1, 6),
  datetime.date(2018, 3, 30),
  datetime.date(2018, 5, 1),
@@ -118,6 +92,18 @@ def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
  datetime.date(2021, 5, 3),
  datetime.date(2021, 5, 15),
  datetime.date(2021, 11, 9)]
+
+
+# $WIPE_END
+
+# http://127.0.0.1:8000/predict?pickup_datetime=2012-10-06 12:10:20&pickup_longitude=40.7614327&pickup_latitude=-73.9798156&dropoff_longitude=40.6513111&dropoff_latitude=-73.8803331&passenger_count=2
+@app.get("/predict")
+def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
+            time,#: datetime.time,    # -73.950655
+            name#: object,     # 40.783282
+            ):      # 1
+
+
     holiday= date in holidays
 
     columns=['activate', 'name', 'reservations_count', 'light', 'total_bases',
@@ -127,20 +113,28 @@ def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
         'hour_cos', 'weekday_sin', 'weekday_cos', 'month_sin', 'month_cos']
     temp = pd.DataFrame(columns=columns)
 
-    datetime=(str(date)+str(time))
+    datetime=(str(date)+str(time.hour))
 
     weekday=date.weekday()
+    weekday=int(weekday)
 
     year=date.year
+    year=int(year)
 
     month=date.month
+    month=int(month)
 
-    hour_sin=  sin(time / 24.0 * 2 * pi)
-    hour_cos=  cos(time / 24.0 * 2 * pi)
+    hour_sin=  sin(time.hour / 24.0 * 2 * pi)
+    hour_cos=  cos(time.hour / 24.0 * 2 * pi)
     weekday_sin= sin(weekday / 7.0 * 2 * pi)
     weekday_cos=  cos(weekday / 7.0 * 2 * pi)
     month_sin=  sin(((month - 5) % 12) / 12.0 * 2 * pi)
     month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
+
+    time=int(time.hour)
+
+    #new_row need to be updated by information from the station
+    #number, light, total_bases, longitude, latitude, weather,
 
     new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
         'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
@@ -161,6 +155,9 @@ def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
     encoded_transform=transform_OHE(temp)
 
     input_processed= concatenate(encoded_standard,encoded_transform)
+    input_processed=np.array([input_processed])
+    input_processed = np.asarray(input_processed).astype('float32')
+
 
     model = app.state.model
 
@@ -169,7 +166,9 @@ def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
     # ⚠️ fastapi only accepts simple python data types as a return value
     # among which dict, list, str, int, float, bool
     # in order to be able to convert the api response to json
-    return dict(prediction=int(y_pred))
+    return y_pred
+
+    #dict(prediction=int(y_pred))
 
 
 
@@ -227,3 +226,12 @@ def index():
 #     # $CHA_BEGIN
 #     return dict(greeting="Hello")
 #     # $CHA_END
+
+
+if __name__=='__main__':
+    now = datetime.datetime.now()
+    date=now.date()
+    time=now.time()
+
+    name='Puerta del Sol B'
+    print(predict(date=date,time=time,name=name))
