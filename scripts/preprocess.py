@@ -7,7 +7,6 @@ from holidays_es import get_provinces, Province
 import sys
 
 
-
 myfile= sys.argv[1]
 station= int(sys.argv[2])
 
@@ -26,11 +25,10 @@ for i in range(len(df['_id'])):
     groups= item.split("T")
     date = groups[0]
     raw_time = groups[1].split(":")
-    time =':'.join(raw_time[:2])
+    time = raw_time[0]
     df["time"][i] = time
     df["date"][i] = date
 
-df['time'] = df.apply(lambda x:datetime.strptime(x['time'], '%H:%M').hour, axis=1)
 df['date'] = pd.to_datetime(df['date'], format='%Y-%m-%d')
 
 holidays=[]
@@ -64,18 +62,16 @@ temp=pd.DataFrame()
 for i in range(len(df)):
     try:
         new_dict= df['stations'][i][station]
-
         new_dict['id']=df['_id'][i]
         new_dict['time']=df['time'][i]
         new_dict['date']=df['date'][i]
         new_dict['holidays']=df['holidays'][i]
         temp = temp.append(new_dict, ignore_index=True)
-
     except:
         quit()
 
 
-temp["datetime"] = df["date"].astype(str)+df["time"].astype(str)
+df["datetime"] = df["day"].astype(str)+" "+df["time"].astype(str)
 temp = temp.merge(weather, on="datetime")
 
 
@@ -95,6 +91,4 @@ temp['month_cos'] = temp.apply(lambda x:cos(((x['month'] - 5) % 12) / 12.0 * 2 *
 
 temp.drop(columns=["name","longitude","address","month","time","weekday"])
 
-temp.to_csv(basename+"_processed.csv", index=False)
-
-
+temp.to_csv("../raw_data"+basename+"_processed.csv", index=False)
