@@ -91,16 +91,16 @@ def load_model() -> Model:
     print(Fore.BLUE + f"\nLoad model {stage} stage from mlflow..." + Style.RESET_ALL)
 
     # load model from mlflow
-    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
+    #mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
 
-    mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME")
+    #mlflow_model_name = os.environ.get("MLFLOW_MODEL_NAME")
 
-    model_uri = f"models:/{mlflow_model_name}/{stage}"
-    print(f"- uri: {model_uri}")
+    #model_uri = f"models:/{mlflow_model_name}/{stage}"
+    #rint(f"- uri: {model_uri}")
 
 
-    model = mlflow.keras.load_model(model_uri=model_uri)
-    print("\n✅ model loaded from mlflow")
+    #model = mlflow.keras.load_model(model_uri=model_uri)
+    #print("\n✅ model loaded from mlflow")
     # except:
     #     print(f"\n❌ no model in stage {stage} on mlflow")
     #     return None
@@ -113,6 +113,8 @@ def load_model() -> Model:
         #     timestamp = time.strftime("%Y%m%d-%H%M%S")
         #     model_path = os.path.join(LOCAL_REGISTRY_PATH, "models", timestamp)
         #     model.save(model_path)
+    #load local model
+    model = models.load_model("model")
 
     return model
 
