@@ -1,26 +1,20 @@
-# from datetime import datetime
-# # $WIPE_BEGIN
-# import pytz
-# import pandas as pd
-
+from contextlib import redirect_stderr
+from datetime import datetime
 from sklearn import preprocessing
 import pandas as pd
 import numpy as np
 from math import pi, sin, cos
-from datetime import datetime
+import datetime
 from holidays_es import get_provinces, Province
 import sys
-import streamlit as st
-
-
-#from bicimad_lewagon.data.registry import load_model
-#from scripts import encoding
-
-# from taxifare.ml_logic.preprocessor import preprocess_features
-# # $WIPE_END
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
+from bicimad_lewagon.data.registry import load_model
+import mlflow
+import os
+from colorama import Fore, Style
+#from tensorflow.keras import Model
 
 app = FastAPI()
 
@@ -40,8 +34,64 @@ app.add_middleware(
 # This will prove very useful for demo days
 
 
-'''app.state.model = load_model()
-'''
+app.state.model = load_model()
+
+holidays=[datetime.date(2018, 1, 1),
+ datetime.date(2018, 1, 6),
+ datetime.date(2018, 3, 30),
+ datetime.date(2018, 5, 1),
+ datetime.date(2018, 8, 15),
+ datetime.date(2018, 10, 12),
+ datetime.date(2018, 11, 1),
+ datetime.date(2018, 12, 6),
+ datetime.date(2018, 12, 8),
+ datetime.date(2018, 12, 25),
+ datetime.date(2018, 3, 29),
+ datetime.date(2018, 5, 2),
+ datetime.date(2018, 5, 15),
+ datetime.date(2018, 11, 9),
+ datetime.date(2019, 1, 1),
+ datetime.date(2019, 4, 19),
+ datetime.date(2019, 5, 1),
+ datetime.date(2019, 8, 15),
+ datetime.date(2019, 10, 12),
+ datetime.date(2019, 11, 1),
+ datetime.date(2019, 12, 6),
+ datetime.date(2019, 12, 25),
+ datetime.date(2019, 1, 7),
+ datetime.date(2019, 4, 18),
+ datetime.date(2019, 5, 2),
+ datetime.date(2019, 12, 9),
+ datetime.date(2019, 5, 15),
+ datetime.date(2019, 11, 9),
+ datetime.date(2020, 1, 1),
+ datetime.date(2020, 1, 6),
+ datetime.date(2020, 4, 10),
+ datetime.date(2020, 5, 1),
+ datetime.date(2020, 8, 15),
+ datetime.date(2020, 10, 12),
+ datetime.date(2020, 12, 8),
+ datetime.date(2020, 12, 25),
+ datetime.date(2020, 4, 9),
+ datetime.date(2020, 5, 2),
+ datetime.date(2020, 11, 2),
+ datetime.date(2020, 12, 7),
+ datetime.date(2020, 5, 15),
+ datetime.date(2020, 11, 9),
+ datetime.date(2021, 1, 1),
+ datetime.date(2021, 1, 6),
+ datetime.date(2021, 4, 2),
+ datetime.date(2021, 5, 1),
+ datetime.date(2021, 10, 12),
+ datetime.date(2021, 11, 1),
+ datetime.date(2021, 12, 6),
+ datetime.date(2021, 12, 8),
+ datetime.date(2021, 12, 25),
+ datetime.date(2021, 3, 19),
+ datetime.date(2021, 4, 1),
+ datetime.date(2021, 5, 3),
+ datetime.date(2021, 5, 15),
+ datetime.date(2021, 11, 9)]
 
 
 # $WIPE_END
@@ -52,112 +102,76 @@ def predict(date,#: datetime.date,  # 2013-07-06 17:18:00
             time,#: datetime.time,    # -73.950655
             name#: object,     # 40.783282
             ):      # 1
-    pass
-#     d = st.date_input("When's your birthday",datetime.now())
-#     date=d
-
-#     t = st.time_input('Set an alarm for', datetime.now())
-#     time=t.hour
-#     print(time)
-
-#     name='Puerta del Sol B'
-
-#     holidays=[datetime.date(2018, 1, 1),
-#  datetime.date(2018, 1, 6),
-#  datetime.date(2018, 3, 30),
-#  datetime.date(2018, 5, 1),
-#  datetime.date(2018, 8, 15),
-#  datetime.date(2018, 10, 12),
-#  datetime.date(2018, 11, 1),
-#  datetime.date(2018, 12, 6),
-#  datetime.date(2018, 12, 8),
-#  datetime.date(2018, 12, 25),
-#  datetime.date(2018, 3, 29),
-#  datetime.date(2018, 5, 2),
-#  datetime.date(2018, 5, 15),
-#  datetime.date(2018, 11, 9),
-#  datetime.date(2019, 1, 1),
-#  datetime.date(2019, 4, 19),
-#  datetime.date(2019, 5, 1),
-#  datetime.date(2019, 8, 15),
-#  datetime.date(2019, 10, 12),
-#  datetime.date(2019, 11, 1),
-#  datetime.date(2019, 12, 6),
-#  datetime.date(2019, 12, 25),
-#  datetime.date(2019, 1, 7),
-#  datetime.date(2019, 4, 18),
-#  datetime.date(2019, 5, 2),
-#  datetime.date(2019, 12, 9),
-#  datetime.date(2019, 5, 15),
-#  datetime.date(2019, 11, 9),
-#  datetime.date(2020, 1, 1),
-#  datetime.date(2020, 1, 6),
-#  datetime.date(2020, 4, 10),
-#  datetime.date(2020, 5, 1),
-#  datetime.date(2020, 8, 15),
-#  datetime.date(2020, 10, 12),
-#  datetime.date(2020, 12, 8),
-#  datetime.date(2020, 12, 25),
-#  datetime.date(2020, 4, 9),
-#  datetime.date(2020, 5, 2),
-#  datetime.date(2020, 11, 2),
-#  datetime.date(2020, 12, 7),
-#  datetime.date(2020, 5, 15),
-#  datetime.date(2020, 11, 9),
-#  datetime.date(2021, 1, 1),
-#  datetime.date(2021, 1, 6),
-#  datetime.date(2021, 4, 2),
-#  datetime.date(2021, 5, 1),
-#  datetime.date(2021, 10, 12),
-#  datetime.date(2021, 11, 1),
-#  datetime.date(2021, 12, 6),
-#  datetime.date(2021, 12, 8),
-#  datetime.date(2021, 12, 25),
-#  datetime.date(2021, 3, 19),
-#  datetime.date(2021, 4, 1),
-#  datetime.date(2021, 5, 3),
-#  datetime.date(2021, 5, 15),
-#  datetime.date(2021, 11, 9)]
-#     holiday= date in holidays
-
-#     columns=['activate', 'name', 'reservations_count', 'light', 'total_bases',
-#         'free_bases', 'number', 'longitude', 'no_available', 'address',
-#         'latitude', 'dock_bikes', 'id', 'time', 'date', 'holidays', 'datetime',
-#         'feels_like', 'weather_main', 'weekday', 'year', 'month', 'hour_sin',
-#         'hour_cos', 'weekday_sin', 'weekday_cos', 'month_sin', 'month_cos']
-#     temp = pd.DataFrame(columns=columns)
-
-#     datetime=(str(date)+str(time))
-
-#     weekday=date.weekday()
-
-#     year=date.year
-
-#     month=date.month
-
-#     hour_sin=  sin(time / 24.0 * 2 * pi)
-#     hour_cos=  cos(time / 24.0 * 2 * pi)
-#     weekday_sin= sin(weekday / 7.0 * 2 * pi)
-#     weekday_cos=  cos(weekday / 7.0 * 2 * pi)
-#     month_sin=  sin(((month - 5) % 12) / 12.0 * 2 * pi)
-#     month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
-
-#     new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
-#         'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
-#         'latitude':-3.701603, 'dock_bikes':0, 'id':(str(date)+'T'+str(time)), 'time':time, 'date':date, 'holidays':holiday, 'datetime':datetime,
-#         'feels_like':17.44, 'weather_main':'Rain', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
-#         'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
 
 
-#     temp=temp.append(new_row,ignore_index=True)
+    holiday= date in holidays
 
-#     for column in ['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'no_available', 'dock_bikes', 'time', 'weekday', 'year', 'month']:
-#         temp[column]=temp[column].astype('int64')
+    columns=['activate', 'name', 'reservations_count', 'light', 'total_bases',
+        'free_bases', 'number', 'longitude', 'no_available', 'address',
+        'latitude', 'dock_bikes', 'id', 'time', 'date', 'holidays', 'datetime',
+        'feels_like', 'weather_main', 'weekday', 'year', 'month', 'hour_sin',
+        'hour_cos', 'weekday_sin', 'weekday_cos', 'month_sin', 'month_cos']
+    temp = pd.DataFrame(columns=columns)
 
-#     temp['holidays']=temp['holidays'].astype('bool')
-#     temp.drop(columns=["name","longitude","address","month","time","weekday"])
+    datetime=(str(date)+str(time.hour))
 
-    #encoded_input=encoding(temp)
+    weekday=date.weekday()
+    weekday=int(weekday)
+
+    year=date.year
+    year=int(year)
+
+    month=date.month
+    month=int(month)
+
+    hour_sin=  sin(time.hour / 24.0 * 2 * pi)
+    hour_cos=  cos(time.hour / 24.0 * 2 * pi)
+    weekday_sin= sin(weekday / 7.0 * 2 * pi)
+    weekday_cos=  cos(weekday / 7.0 * 2 * pi)
+    month_sin=  sin(((month - 5) % 12) / 12.0 * 2 * pi)
+    month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
+
+    time=int(time.hour)
+
+    #new_row need to be updated by information from the station
+    #number, light, total_bases, longitude, latitude, weather,
+
+    new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
+        'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
+        'latitude':-3.701603, 'dock_bikes':0, 'id':(str(date)+'T'+str(time)), 'time':time, 'date':date, 'holidays':holiday, 'datetime':datetime,
+        'feels_like':17.44, 'weather_main':'Rain', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
+        'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
+
+
+    temp=temp.append(new_row,ignore_index=True)
+
+    for column in ['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'no_available', 'dock_bikes', 'time', 'weekday', 'year', 'month']:
+        temp[column]=temp[column].astype('int64')
+
+    temp['holidays']=temp['holidays'].astype('bool')
+    #temp.drop(columns=["name","longitude","address","month","time","weekday"])
+
+    encoded_standard=transform_standard(temp)
+    encoded_transform=transform_OHE(temp)
+
+    input_processed= concatenate(encoded_standard,encoded_transform)
+    input_processed=np.array([input_processed])
+    input_processed = np.asarray(input_processed).astype('float32')
+
+
+    model = app.state.model
+
+    y_pred = model.predict(input_processed)
+
+    # ⚠️ fastapi only accepts simple python data types as a return value
+    # among which dict, list, str, int, float, bool
+    # in order to be able to convert the api response to json
+    return y_pred
+
+    #dict(prediction=int(y_pred))
+
+
+
 
 @app.get("/test")
 def index(test: str):
@@ -212,3 +226,12 @@ def index():
 #     # $CHA_BEGIN
 #     return dict(greeting="Hello")
 #     # $CHA_END
+
+
+if __name__=='__main__':
+    now = datetime.datetime.now()
+    date=now.date()
+    time=now.time()
+
+    name='Puerta del Sol B'
+    print(predict(date=date,time=time,name=name))
