@@ -106,17 +106,17 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
 
     holiday= date in holidays
 
-    columns=['activate', 'name', 'reservations_count', 'light', 'total_bases',
-        'free_bases', 'number', 'longitude', 'no_available', 'address',
-        'latitude', 'dock_bikes', 'id', 'time', 'date', 'holidays', 'datetime',
+    columns=['reservations_count',
+         'number','dock_bikes', 'time','holidays',"date",
         'feels_like', 'weather_main', 'weekday', 'year', 'month', 'hour_sin',
         'hour_cos', 'weekday_sin', 'weekday_cos', 'month_sin', 'month_cos']
     temp = pd.DataFrame(columns=columns)
 
-    datetime=(str(date)+str(time.hour))
+    #datetime=(str(date)+str(time.hour))
 
     weekday=date.weekday()
     weekday=int(weekday)
+
 
     year=date.year
     year=int(year)
@@ -132,18 +132,18 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
     month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
 
     time=int(time.hour)
-
     #new_row need to be updated by information from the station
     #number, light, total_bases, longitude, latitude, weather,
 
     new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
         'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
         'latitude':-3.701603, 'dock_bikes':0, 'id':(str(date)+'T'+str(time)), 'time':time, 'date':date, 'holidays':holiday, 'datetime':datetime,
-        'feels_like':17.44, 'weather_main':'Rain', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
+        'feels_like':17.44, 'weather_main':'Clear', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
         'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
 
 
     temp=temp.append(new_row,ignore_index=True)
+    temp.drop(columns="date")               #date is not in the pipeline input requirements
 
     for column in ['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'no_available', 'dock_bikes', 'time', 'weekday', 'year', 'month']:
         temp[column]=temp[column].astype('int64')
@@ -151,22 +151,22 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
     temp['holidays']=temp['holidays'].astype('bool')
     #temp.drop(columns=["name","longitude","address","month","time","weekday"])
 
-    encoded_standard=transform_standard(temp)
-    encoded_transform=transform_OHE(temp)
+    # encoded_standard=transform_standard(temp)
+    # encoded_transform=transform_OHE(temp)
 
-    input_processed= concatenate(encoded_standard,encoded_transform)
-    input_processed=np.array([input_processed])
-    input_processed = np.asarray(input_processed).astype('float32')
+    # input_processed= concatenate(encoded_standard,encoded_transform)
+    # input_processed=np.array([input_processed])
+    # input_processed = np.asarray(input_processed).astype('float32')
 
 
     model = app.state.model
 
     y_pred = model.predict(input_processed)
-
+    result = {"number_bikes":str(y_pred[0][0])}
     # ⚠️ fastapi only accepts simple python data types as a return value
     # among which dict, list, str, int, float, bool
     # in order to be able to convert the api response to json
-    return y_pred
+    return result
 
     #dict(prediction=int(y_pred))
 
