@@ -1,5 +1,6 @@
 from contextlib import redirect_stderr
 from datetime import datetime
+from re import X
 from sklearn import preprocessing
 import pandas as pd
 import numpy as np
@@ -10,7 +11,7 @@ import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
-from bicimad_lewagon.data.registry import load_model
+from bicimad_lewagon.data.registry import load_preprocessor,  load_model
 import mlflow
 import os
 from colorama import Fore, Style
@@ -35,6 +36,7 @@ app.add_middleware(
 
 
 app.state.model = load_model()
+app.state.preproc = load_preprocessor()
 
 holidays=[datetime.date(2018, 1, 1),
  datetime.date(2018, 1, 6),
@@ -135,18 +137,26 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
     #new_row need to be updated by information from the station
     #number, light, total_bases, longitude, latitude, weather,
 
-    new_row={'activate':1, 'name':name, 'reservations_count':0, 'light':0, 'total_bases':30,
-        'free_bases':28, 'number':'1b', 'longitude':-3.701603, 'no_available':0, 'address':'Puerta del Sol nº 1',
-        'latitude':-3.701603, 'dock_bikes':0, 'id':(str(date)+'T'+str(time)), 'time':time, 'date':date, 'holidays':holiday, 'datetime':datetime,
-        'feels_like':17.44, 'weather_main':'Clear', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
+#TODO:
+#    dictionary between names and numbers
+#
+
+    new_row={'reservations_count':0, 'number':'1b', 'dock_bikes':0,'time':time, 'date':date, 'holidays':holiday,
+             'feels_like':17.44, 'weather_main':'Clear', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
         'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
 
 
     temp=temp.append(new_row,ignore_index=True)
-    temp.drop(columns="date")               #date is not in the pipeline input requirements
 
-    for column in ['activate', 'reservations_count', 'light', 'total_bases', 'free_bases', 'no_available', 'dock_bikes', 'time', 'weekday', 'year', 'month']:
-        temp[column]=temp[column].astype('int64')
+    temp = temp.drop(columns="date")               #date is not in the pipeline input requirements
+
+    for column in ['reservations_count', 'dock_bikes', 'time', 'weekday',"month"]:
+        temp[column]=temp[column].astype('int8')
+    for column in ['year',"number"]:
+        temp[column]=temp[column].astype('object')
+    for column in ['feels_like',"hour_sin","hour_cos","weekday_sin","weekday_cos","month_sin","month_cos"]:
+        temp[column]=temp[column].astype('float32')
+
 
     temp['holidays']=temp['holidays'].astype('bool')
     #temp.drop(columns=["name","longitude","address","month","time","weekday"])
@@ -160,17 +170,21 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
 
 
     model = app.state.model
+    preproc  = app.state.preproc
 
-    y_pred = model.predict(input_processed)
-    result = {"number_bikes":str(y_pred[0][0])}
+    x_proc = preproc.transform(temp)
+
+    x_proc = x_proc[:,:-1]
+
+    y_pred = model.predict(x_proc)
+
+    result = {"number_bikes":str(round(y_pred[0]))}
     # ⚠️ fastapi only accepts simple python data types as a return value
     # among which dict, list, str, int, float, bool
     # in order to be able to convert the api response to json
-    return result
 
     #dict(prediction=int(y_pred))
-
-
+    return result
 
 
 @app.get("/test")
@@ -234,4 +248,5 @@ if __name__=='__main__':
     time=now.time()
 
     name='Puerta del Sol B'
+
     print(predict(date=date,time=time,name=name))
