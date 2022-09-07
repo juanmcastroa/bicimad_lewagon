@@ -1,12 +1,12 @@
 # from taxifare.ml_logic.params import LOCAL_REGISTRY_PATH
 
-import mlflow
+# import mlflow
 # from mlflow.tracking import MlflowClient
 
 # import glob
 import os
 # import time
-# import pickle
+import pickle
 
 from colorama import Fore, Style
 
@@ -86,9 +86,9 @@ def load_model() -> Model:
     """
     load the latest saved model, return None if no model found
     """
-    stage = "Production"
+    # stage = "Production"
 
-    print(Fore.BLUE + f"\nLoad model {stage} stage from mlflow..." + Style.RESET_ALL)
+    # print(Fore.BLUE + f"\nLoad model {stage} stage from mlflow..." + Style.RESET_ALL)
 
     # load model from mlflow
     #mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
@@ -114,7 +114,11 @@ def load_model() -> Model:
         #     model_path = os.path.join(LOCAL_REGISTRY_PATH, "models", timestamp)
         #     model.save(model_path)
     #load local model
-    model = models.load_model("model")
+    #model = models.load_model("model")
+
+    # Load model from pickle file
+    model = pickle.load(open('RandomForest_model/RandomF_model.pkl', 'rb'))
+    print('Model loaded ✅')
 
     return model
 
@@ -164,3 +168,9 @@ def load_model() -> Model:
 #     # model version not handled
 
 #     return None
+
+def load_preprocessor():
+    pipe = pickle.load(open('RandomForest_model/Preproc_pipe.pkl', 'rb'))
+    print('Preprocessor pipeline loaded ✅')
+
+    return pipe

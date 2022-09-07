@@ -1,8 +1,8 @@
-sklearn
+scikit-learn==1.0.2
 pandas
 numpy
-seaborn
-matplotlib
+#seaborn
+#matplotlib
 
 tensorflow
 mlflow
@@ -17,6 +17,6 @@ fastapi
 
 uvicorn
 
-holidays-es
+#holidays-es
 
 beautifulsoup4

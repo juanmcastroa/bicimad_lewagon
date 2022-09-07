@@ -5,13 +5,13 @@ import pandas as pd
 import numpy as np
 from math import pi, sin, cos
 import datetime
-from holidays_es import get_provinces, Province
+#from holidays_es import get_provinces, Province
 import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
-from bicimad_lewagon.data.registry import load_model
-import mlflow
+from bicimad_lewagon.data.registry import load_model, load_preprocessor
+#import mlflow
 import os
 from colorama import Fore, Style
 #from tensorflow.keras import Model
@@ -35,6 +35,7 @@ app.add_middleware(
 
 
 app.state.model = load_model()
+app.state.preproc = load_preprocessor()
 
 holidays=[datetime.date(2018, 1, 1),
  datetime.date(2018, 1, 6),
@@ -160,8 +161,9 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
 
 
     model = app.state.model
+    preproc =app.state.preproc
 
-    y_pred = model.predict(input_processed)
+    y_pred = model.predict(preproc.transform(X))
 
     # ⚠️ fastapi only accepts simple python data types as a return value
     # among which dict, list, str, int, float, bool
