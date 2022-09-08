@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from bicimad_lewagon.data.encoding_pickle import transform_OHE, transform_standard, concatenate
 from bicimad_lewagon.data.registry import load_preprocessor,  load_model
+from bicimad_lewagon.data.weather import weather
 import mlflow
 import os
 from colorama import Fore, Style
@@ -102,7 +103,8 @@ holidays=[datetime.date(2018, 1, 1),
 @app.get("/predict")
 def predict(date: datetime.date,  # 2013-07-06 17:18:00
             time: datetime.time,    # -73.950655
-            name: object,     # 40.783282
+            address: object = "1b",     # 40.783282
+
             ):      # 1
 
 
@@ -133,7 +135,9 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
     month_sin=  sin(((month - 5) % 12) / 12.0 * 2 * pi)
     month_cos= cos(((month - 5) % 12) / 12.0 * 2 * pi)
 
+    weather_main, feels_like = weather(date,time)
     time=int(time.hour)
+
     #new_row need to be updated by information from the station
     #number, light, total_bases, longitude, latitude, weather,
 
@@ -141,8 +145,8 @@ def predict(date: datetime.date,  # 2013-07-06 17:18:00
 #    dictionary between names and numbers
 #
 
-    new_row={'reservations_count':0, 'number':'1b', 'dock_bikes':0,'time':time, 'date':date, 'holidays':holiday,
-             'feels_like':17.44, 'weather_main':'Clear', 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
+    new_row={'reservations_count':0, 'number':address, 'dock_bikes':0,'time':time, 'date':date, 'holidays':holiday,
+             'feels_like':feels_like, 'weather_main': weather_main, 'weekday':weekday, 'year':year, 'month':month, 'hour_sin':hour_sin,
         'hour_cos':hour_cos, 'weekday_sin':weekday_sin, 'weekday_cos':weekday_cos, 'month_sin':month_sin, 'month_cos':month_cos}
 
 
